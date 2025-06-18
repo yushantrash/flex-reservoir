@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Réservoir d'eau - Capteur Flex</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #e0f7fa, #fce4ec);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 50px 20px;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .reservoir {
+      position: relative;
+      width: 140px;
+      height: 350px;
+      margin: 0 auto 20px;
+      border: 6px solid #555;
+      border-radius: 15px;
+      background: #fafafa;
+      overflow: hidden;
+    }
+
+    .eau {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #2196f3, #4fc3f7);
+      animation: ondulation 2s infinite ease-in-out;
+      transition: height 1s ease;
+    }
+
+    @keyframes ondulation {
+      0%   { transform: scaleX(1) }
+      50%  { transform: scaleX(1.03) }
+      100% { transform: scaleX(1) }
+    }
+
+    .niveau-label {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .mode {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.2);
+      margin-left: 10px;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Suivi du Réservoir d'Eau</h1>
+
+  <div class="card">
+    <div class="reservoir">
+      <div id="eau" class="eau"></div>
+    </div>
+
+    <p class="niveau-label">Valeur actuelle : <span id="valeur">...</span></p>
+
+    <div class="mode">
+      <label>
+        Mode simulation
+        <input type="checkbox" id="simulationToggle" checked />
+      </label>
+    </div>
+  </div>
+
+  <footer>
+    Prototype visuel basé sur capteur flex – simulation active sans capteur
+  </footer>
+
+  <script>
+    const apiUrl = "https://api.thingspeak.com/channels/2991743/fields/1/last.json?api_key=F9EDPMVOSA2HQT4B";
+
+    function getNiveauPour(valeur) {
+      if (valeur <= 400) return 33;
+      else if (valeur <= 700) return 66;
+      else return 100;
+    }
+
+    async function majNiveau() {
+      const simulation = document.getElementById("simulationToggle").checked;
+      let valeur;
+
+      if (simulation) {
+        valeur = Math.floor(Math.random() * (900 - 200)) + 200;
+      } else {
+        try {
+          const res = await fetch(apiUrl);
+          const data = await res.json();
+          valeur = parseFloat(data.field1);
+        } catch (e) {
+          console.error("Erreur API :", e);
+          return;
+        }
+      }
+
+      document.getElementById("valeur").textContent = valeur;
+      const hauteur = getNiveauPour(valeur);
+      document.getElementById("eau").style.height = hauteur + "%";
+    }
+
+    majNiveau();
+    setInterval(majNiveau, 5000);
+  </script>
+
+</body>
+</html>
